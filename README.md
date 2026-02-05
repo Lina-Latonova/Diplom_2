@@ -1,1 +1,10 @@
 # Diplom_2
+# Для запуска тестов с отчетностью allure: 
+    1) pytest tests/ --alluredir=allure_results -v
+    2) allure generate allure_results -o allure_report --clean
+    3) allure open allure_report
+    
+## Структура проекта: 
+    в папке data/ лежат данные для автотестов
+    в папке fixture лежат базовые фикстуры
+    в папке tests лежат автотесты на API
