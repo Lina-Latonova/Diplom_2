@@ -2,27 +2,10 @@ import pytest
 import requests
 import uuid
 import logging
-from data.test_data import TEST_USER, EXISTING_USER, LOGIN_USER
+from data.test_data import TEST_USER, EXISTING_USER
 from constants import REGISTER_URL, LOGIN_URL, DELETE_URL
 
 logger = logging.getLogger(__name__)
-
-# Фикстура для подготовки общих тестовых данных
-@pytest.fixture(scope="session", autouse=True)
-def prepare_test_data():
-    # Регистрация основных пользователей вне тестов
-    for user in [TEST_USER, EXISTING_USER, LOGIN_USER]:
-        try:
-            response = requests.post(REGISTER_URL, json=user)
-            
-            if response.status_code == 403:
-                logger.info(f"Пользователь уже существует: {user['email']}")
-            elif response.status_code == 200:
-                logger.info(f"Создан пользователь: {user['email']}")
-            else:
-                logger.error(f"Неожиданный статус-код: {response.status_code}, Response Body: {response.text}")
-        except requests.RequestException as e:
-            logger.exception(f"Ошибка при создании пользователя: {e}")
 
 # Фикстура для получения токена авторизации
 @pytest.fixture
@@ -35,13 +18,9 @@ def auth_token():
     else:
         pytest.skip("Не удалось авторизоваться.")
 
-# Новая фикстура для создания и удаления временного пользователя в каждом отдельном тесте
+# Фикстура для создания и удаления временного пользователя в каждом отдельном тесте
 @pytest.fixture
-def create_temp_user():
-    """
-    Регистрирует временного пользователя и удаляет его после завершения теста.
-    Возвращает кортеж (user_data, access_token).
-    """
+def temp_user():
     unique_email = f"temp_user_{uuid.uuid4()}@example.com"
     password = "temp_password"
     name = "Temp User"
@@ -71,3 +50,19 @@ def create_temp_user():
     
     if delete_response.status_code != 200:
         logger.warning(f"Не удалось удалить временный аккаунт: {delete_response.text}. Возможно, произошла ошибка.")
+
+# Дополнительная фикстура для случая с заведомо существующим пользователем
+@pytest.fixture
+def existing_user():
+    return EXISTING_USER
+
+# Фикстура для отправки запросов без авторизации
+@pytest.fixture
+def unauthorized_request():
+    def send_unauthorized_request(url, method='GET'):
+        methods_map = {'GET': requests.get, 'POST': requests.post, 'DELETE': requests.delete}
+        request_method = methods_map.get(method.upper())
+        if not request_method:
+            raise ValueError(f"Неподдерживаемый HTTP-метод: {method}")
+        return request_method(url)
+    return send_unauthorized_request

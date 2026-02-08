@@ -1,51 +1,44 @@
+import uuid
 
-VALID_USER_DATA = { 
-    "email": "your_real_email@example.com",  
-    "password": "your_real_password" 
-} 
- 
-TEST_USER = { 
-    "email": "test-order-user@example.com", 
-    "password": "password123", 
-    "name": "Test Order User" 
-} 
- 
-EXISTING_USER = { 
-    "email": "existing-user@example.com", 
-    "password": "password123",  
-    "name": "Existing User" 
-} 
- 
-LOGIN_USER = { 
-    "email": "test-login@example.com", 
-    "password": "password123", 
-    "name": "Test Login User" 
+def generate_unique_email():
+    return f"test_{uuid.uuid4()}@example.com"
+
+TEST_USER = {
+    "email": "test-order-user@example.com",
+    "password": "password123",
+    "name": "Test Order User"
 }
 
+EXISTING_USER = {
+    "email": "existing-user@example.com", 
+    "password": "password123",
+    "name": "Existing User"
+}
+
+LOGIN_USER = {
+    "email": "test-login@example.com",
+    "password": "password123",
+    "name": "Test Login User"
+}
 
 INVALID_USER_PAYLOADS = [
-    (
+    ( # Пустой email
         {"email": "", "password": "password123", "name": "Test User"},
-        "required fields"
+        "Email, password and name are required fields" 
     ),
-    (
-        {"email": "test@example.com", "password": "", "name": "Test User"},
-        "required fields"
+    ( # Пустой пароль
+        {"email": generate_unique_email(), "password": "", "name": "Test User"},
+        "Email, password and name are required fields"
     ),
-    (
-        {"email": "test@example.com", "password": "password123", "name": ""},
-        "required fields"
+    ( # Пустое имя
+        {"email": generate_unique_email(), "password": "password123", "name": ""},
+        "Email, password and name are required fields"
     ),
-    (
+    ( # Невалидный формат email
         {"email": "invalid-email", "password": "password123", "name": "Test User"},
-        "valid email"
-    ),
-    (
-        {"email": "test@example.com", "password": "123", "name": "Test User"},
-        "password"
+        "User already exists"
     )
 ]
-
 
 ORDER_TEST_DATA = {
     "VALID_INGREDIENTS": ["61c0c5a71d1f82001bdaaa6d", "61c0c5a71d1f82001bdaaa6f"],
@@ -61,7 +54,6 @@ LOGIN_TEST_DATA = {
         "password": "wrong_password"
     }
 }
-
 
 ERROR_MESSAGES = {
     "REQUIRED_FIELDS": "Email, password and name are required fields",

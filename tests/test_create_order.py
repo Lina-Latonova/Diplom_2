@@ -3,87 +3,69 @@ import requests
 import allure
 from constants import ORDERS_URL
 from data.test_data import ORDER_TEST_DATA, ERROR_MESSAGES
- 
+
 class TestCreateOrder:
      
     @allure.title("Создание заказа с авторизацией") 
-    def test_create_order_with_authorization(self, auth_token):
-        order_data = {
-            "ingredients": ORDER_TEST_DATA["VALID_INGREDIENTS"]
-        }
-
-        response = requests.post(
-            ORDERS_URL,
-            headers={'Authorization': auth_token},
-            json=order_data
-        )
-
-        # Проверяем статус-код ответа сервера
+    def test_order_with_authorization(self, auth_token):
+        ingredients = ORDER_TEST_DATA["VALID_INGREDIENTS"]
+        order_payload = {"ingredients": ingredients}
+        response = requests.post(ORDERS_URL, json=order_payload, headers={"Authorization": auth_token})
         assert response.status_code == 200
-        # Проверяем наличие успешного результата
-        assert response.json()['success'] is True
-        # Проверяем структуру ответа
-        assert 'name' in response.json()
-        assert 'order' in response.json()
-        assert 'number' in response.json()['order']
+        
+        # Дополнительно проверяем содержимое ответа
+        response_body = response.json()
+        assert "_id" in response_body["order"] 
+        assert "number" in response_body["order"]
+        response_ingredients = [item["_id"] for item in response_body["order"]["ingredients"]]
+        assert set(response_ingredients) == set(ingredients)
      
-    @allure.title("Создание заказа с ингредиентами") 
-    def test_create_order_with_ingredients(self, auth_token): 
-        order_data = {
-            "ingredients": ORDER_TEST_DATA["VALID_INGREDIENTS"]
-        }
-         
-        response = requests.post(
-            ORDERS_URL,
-            headers={'Authorization': auth_token},
-            json=order_data
-        )
-         
-        assert response.status_code == 200 
-        assert response.json()['success'] == True
-        assert 'order' in response.json()
-        assert 'number' in response.json()['order']
-        assert 'name' in response.json()
+    @allure.title("Создание заказа с валидными ингредиентами")
+    def test_order_with_valid_ingredients(self, auth_token):
+        valid_ingredients = ORDER_TEST_DATA["VALID_INGREDIENTS"]
+        order_payload = {"ingredients": valid_ingredients}
+        response = requests.post(ORDERS_URL, json=order_payload, headers={"Authorization": auth_token})
+        assert response.status_code == 200
+        assert len(response.json()) > 0
+
+        response_body = response.json()
+        assert "_id" in response_body["order"]
+        assert "number" in response_body["order"]
+        response_ingredients = [item["_id"] for item in response_body["order"]["ingredients"]]
+        assert set(response_ingredients) == set(valid_ingredients)
  
     @allure.title("Создание заказа без авторизации") 
-    def test_order_without_authorization(self): 
-        order_data = {
-            "ingredients": ORDER_TEST_DATA["SINGLE_INGREDIENT"]
-        }
-         
-        response = requests.post(ORDERS_URL, json=order_data)
-         
+    def test_order_without_authorization(self, unauthorized_request):     
+        valid_ingredients = ORDER_TEST_DATA["VALID_INGREDIENTS"]
+        order_payload = {"ingredients": valid_ingredients}
+        response = unauthorized_request(ORDERS_URL, method='POST')
         assert response.status_code == 401
-        assert response.json()['success'] == False
-        assert response.json()['message'] == ERROR_MESSAGES["UNAUTHORIZED"]
-     
+
+        response_body = response.json()
+        assert "success" in response_body
+        assert response_body["success"] == False
+        assert "message" in response_body
+        assert response_body["message"] == "You should be authorized"
+
+
     @allure.title("Создание заказа без ингредиентов") 
-    def test_order_without_ingredients(self, auth_token): 
-        response = requests.post(
-            ORDERS_URL,
-            headers={'Authorization': auth_token},
-            json={"ingredients": ORDER_TEST_DATA["EMPTY_INGREDIENTS"]}
-        )
-         
+    def test_order_without_ingredients(self, auth_token):
+        empty_ingredients = ORDER_TEST_DATA["EMPTY_INGREDIENTS"]
+        order_payload = {"ingredients": empty_ingredients}
+        response = requests.post(ORDERS_URL, json=order_payload, headers={"Authorization": auth_token})
         assert response.status_code == 400
-        assert response.json()['success'] == False
-        assert response.json()['message'] == ERROR_MESSAGES["INGREDIENTS_REQUIRED"]
-     
-    @allure.title("Создание заказа с невалидным хешем ингредиента") 
-    def test_order_with_invalid_ingredient_hash(self, auth_token):
-        order_data = {
-            "ingredients": ORDER_TEST_DATA["INVALID_INGREDIENTS"]
-        }
+        assert ERROR_MESSAGES["INGREDIENTS_REQUIRED"] in response.json()['message']
+    
 
-        response = requests.post(
-            ORDERS_URL,
-            headers={'Authorization': auth_token},
-            json=order_data
-        )
+    @allure.title("Создание заказа с неверным хешем ингредиентов")
+    def test_order_with_invalid_ingredients(self, auth_token):
+        invalid_ingredients = ORDER_TEST_DATA["INVALID_INGREDIENTS"]
+        order_payload = {"ingredients": invalid_ingredients}
+        response = requests.post(ORDERS_URL, json=order_payload, headers={"Authorization": auth_token})
 
-        # Проверяем статус-код ответа сервера
-        assert response.status_code == 500
+        # Проверка статуса ответа
+        assert response is not None, "Response is None"
+        assert response.status_code == 500, f"Expected status code 500, but got {response.status_code}"
 
-        # Так как ответ содержит HTML с сообщением об ошибке, проверим его прямо текстом
-        error_text = response.text.strip()
-        assert "<pre>Internal Server Error</pre>" in error_text
+        # Проверка содержимого ответа
+        assert "Internal Server Error" in response.text, f"Expected 'Internal Server Error' in HTML response, but got '{response.text}'"
