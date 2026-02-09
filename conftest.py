@@ -28,8 +28,7 @@ def temp_user():
     register_response = requests.post(REGISTER_URL, json={
         "email": unique_email,
         "password": password,
-        "name": name
-    })
+        "name": name})
     
     if register_response.status_code != 200:
         raise Exception(f"Не удалось создать временный аккаунт: {register_response.text}")
@@ -45,8 +44,7 @@ def temp_user():
     # Удаление пользователя после завершения теста
     delete_response = requests.delete(
         DELETE_URL,
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
+        headers={"Authorization": f"Bearer {access_token}"})
     
     if delete_response.status_code != 200:
         logger.warning(f"Не удалось удалить временный аккаунт: {delete_response.text}. Возможно, произошла ошибка.")

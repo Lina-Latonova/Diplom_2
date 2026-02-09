@@ -6,7 +6,6 @@ from constants import REGISTER_URL
 from data.test_data import EXISTING_USER, INVALID_USER_PAYLOADS, ERROR_MESSAGES
 
 class TestCreateUser:
-    
     @allure.title("Тест создания уникального пользователя")
     def test_create_unique_user(self):
         unique_email = f"temp_user_{uuid.uuid4()}@example.com"
@@ -17,8 +16,7 @@ class TestCreateUser:
         register_payload = {
             "email": unique_email,
             "password": password,
-            "name": name
-        }
+            "name": name}
         response = requests.post(REGISTER_URL, json=register_payload)
         
         # Шаг 2: Проверка статуса ответа
