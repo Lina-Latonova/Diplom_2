@@ -1,4 +1,3 @@
-# constants.py
 BASE_URL = 'https://stellarburgers.education-services.ru/'
 
 # Auth endpoints
