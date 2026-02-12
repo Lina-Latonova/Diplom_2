@@ -1,0 +1,36 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Results from running tests
+allure-results/
+
+# Environment variables
+.env.*
+
+# Virtual environments
+venv/
+
+# VSCode workspace settings
+.vscode/
+
+# Pipenv/Poetry lockfiles
+pipfile.lock
+poetry.lock
+
+# Temporary build artifacts
+build/
+dist/
+
+# Logs
+logs/
+*.log
+
+# Local configuration overrides
+local_settings.py
+config/local.py
+
+# Commonly ignored directories
+.DS_Store
+Thumbs.db
+.node_modules/
